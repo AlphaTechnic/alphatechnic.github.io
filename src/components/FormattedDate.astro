@@ -1,0 +1,15 @@
+---
+interface Props {
+	date: Date
+}
+
+const { date } = Astro.props
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+
+dayjs.extend(utc)
+---
+
+<time datetime={date.toISOString()}>
+	{dayjs.utc(date).format('D MMM YYYY')}
+</time>
