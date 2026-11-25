@@ -1,6 +1,6 @@
 ---
 title: 'How CPython Handles Hash Collisions'
-description: 'There are theoretical approaches to avoid collisions in hash maps:'
+description: 'Separate chaining or open addressing? CPython''s source shows how dict resolves hash collisions with open addressing and a perturbed probe sequence.'
 pubDate: 2022-04-21
 tags: ['cpython', 'Hash Collision']
 ---
@@ -134,7 +134,7 @@ Two key qualities of a good hash function are likely the following:
 1. **Fast computation**
 2. **Minimizing collisions**
 
-This is what the CPython comments refer to when they mention using a **very regular** hash function. The “very regular” rule refers to `taking the low-order i bits` as the initial table index. This approach is described as **extremely fast**.
+Here, **very regular** describes the hash functions themselves: for example, the ints `0, 1, 2, 3` simply hash to `0, 1, 2, 3`. The CPython comments explain that this isn’t necessarily bad. In a table of size `2**i`, `taking the low-order i bits` as the initial table index is **extremely fast**, and a contiguous range of ints causes no collisions at all.
 
 ## Collision
 
@@ -144,7 +144,6 @@ j = ((5*j) + 1) mod 2**i;
 
 - How are collisions handled? Python updates the probe index using the recurrence:
     - This formula is proven to visit every slot exactly once before repeating.
-    - The multiplier `5` was chosen because Tim Peters found it minimized total collisions across both normal and pathological cases (although `4` and `6` performed similarly).
 
 ```text
 j = (5*j) + 1 + perturb;
@@ -154,6 +153,7 @@ use j % 2**i as the next table index;
 
 - On top of that, Python adds a “`perturb`” value drawn from the full hash code
     - The `PERTURB_SHIFT` constant balances how quickly high-order bits of the hash influence the sequence.
+    - Its value `5` was chosen because Tim Peters found it minimized total collisions across both normal and pathological cases (although `4` and `6` performed similarly).
     - Over iterations, `perturb` shifts right until it becomes zero, at which point the probe follows just `5*j+1`.
     - Since one empty slot is guaranteed, this sequence will eventually find it.
 

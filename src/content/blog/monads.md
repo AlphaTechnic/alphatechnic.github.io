@@ -1,6 +1,6 @@
 ---
 title: 'The Way I Understand Monads'
-description: 'One powerful way to understand a concept—especially abstract ones—is to ask two simple but profound questions:'
+description: 'What is a Monad, and why is it defined that way? I work through both questions, from flatMap and Option to IO and ZIO.'
 pubDate: 2025-06-22
 tags: ['fp', 'monad']
 ---
@@ -116,7 +116,7 @@ val program: IO[Unit] =
     } yield ()
 ```
 
-In the example above, `program` is not an action—it is a **blueprint**. We can chain these blueprints safely and predictably using `flatMap` without ever leaving the pure functional world. Thanks to the **Monad abstraction**, we can model these operations as **values**. We don’t run them immediately — we _describe_ them. And more importantly, we can chain them **safely and predictably**, using `flatMap`, without ever leaving the pure functional world. The result of that chaining is not an action — again, it’s still a **value**: a description of what could happen. The program becomes a large blueprint of "what to do," which is only executed at the very end (the "end of the world").
+In the example above, `program` is not an action—it is a **blueprint**. We can chain these blueprints **safely and predictably** using `flatMap` without ever leaving the pure functional world. The result of that chaining is not an action — again, it’s still a **value**: a description of what could happen. The program becomes a large blueprint of "what to do," which is only executed at the very end (the "end of the world").
 
 This separation gives us:
 
