@@ -7,7 +7,7 @@ tags: ['macro', 'scala']
 
 ## Intro
 
-When developing, we often need to iterate over a collection and pick out only the elements of specific types. This seems like a simple task, but what's the optimal way to write the code? In this post, I'll share my journey, starting from inefficient code and progressing to a final solution that is **type-safe, efficient, and reusable**, using Scala 3 macros.
+When developing, we often need to iterate over a collection and pick out only the elements of specific types. This seems like a simple task, but what's the best way to write the code? In this post, I'll share the steps I took. I start from inefficient code and move to a final solution that is **type-safe, efficient, and reusable**. The final solution uses Scala 3 macros.
 
 ## The Start of the Problem: Inefficient Type Filtering
 
@@ -31,7 +31,7 @@ object Shape {
 sealed trait NotShape
 ```
 
-Imagine we have an `Iterable[Shape]` and we want to extract all the elements of type `Shape.Circle`, `Shape.Square`, and `Shape.Polygon.Triangle`. The most intuitive code I first came up with was this:
+Imagine we have an `Iterable[Shape]`. We want to extract all the elements of type `Shape.Circle`, `Shape.Square`, and `Shape.Polygon.Triangle`. The most intuitive code I first came up with was this:
 
 ```scala
 val shapes: Iterable[Shape] = getShapes() // A function that returns a list of shapes
@@ -41,11 +41,11 @@ val squares    = shapes.collect { case s: Shape.Square => s }
 val triangles  = shapes.collect { case t: Shape.Polygon.Triangle => t }
 ```
 
-The biggest problem with this code is clear. Even though we could complete the task in a single pass since each shape type is mutually exclusive, this code **iterates through the `shapes` collection three separate times**. As the amount of data grows, this inefficiency becomes a direct cause of performance degradation.
+The biggest problem with this code is clear. Each shape type is mutually exclusive, so we could complete the task in a single pass. But this code **iterates through the `shapes` collection three separate times**. As the amount of data grows, this inefficiency becomes a direct cause of worse performance.
 
 ## First Improvement: One-Pass Iteration with `foldLeft`
 
-To improve performance, I wrote code that uses `foldLeft` to perform the collection in a single pass.
+To improve performance, I wrote code that uses `foldLeft` to do the collection in a single pass.
 
 ```scala
 val (circles, squares, triangles) =
@@ -61,12 +61,12 @@ val (circles, squares, triangles) =
   }
 ```
 
-This code certainly has the advantage of getting the desired result in a single pass. However, I wasn't very happy with it for two clear reasons:
+This code certainly has the advantage of getting the result we want in a single pass. However, I wasn't very happy with it for two clear reasons:
 
 - **Verbose Code**: As more types are added, the initial tuple for `foldLeft` and the `case` statements get longer and longer.
-- **Not Intuitive**: `foldLeft` is typically used for **aggregating** values, but here it's being used simply for '**collecting**' by type, which obscures its intent.
+- **Not Intuitive**: `foldLeft` is typically used for **aggregating** values. Here, it's being used simply for '**collecting**' by type. This makes its intent harder to see.
 
-I wanted to create a method that was both intuitive and efficient, something like `.collectTypes[Circle, Square, Triangle]`.
+I wanted to create a method that was both intuitive and efficient. I wanted something like `.collectTypes[Circle, Square, Triangle]`.
 
 ## Second Improvement: Extension Methods with `implicit class`
 
@@ -74,7 +74,7 @@ To add new functionality to `Iterable[A]`, I decided to use an `implicit class`.
 
 > What is an implicit class?
 > 
-> An `implicit class` is a powerful Scala feature that allows you to add new methods to existing classes without modifying their source code. When the compiler sees a method call on an object that doesn't exist, it looks for an `implicit class` in scope that can "wrap" the object to provide that method. This is also known as the '**Extension Method**' pattern.
+> An `implicit class` is a powerful Scala feature. It allows you to add new methods to existing classes without changing their source code. The compiler may see a call to a method that doesn't exist on an object. When this happens, it looks for an `implicit class` in scope that can "wrap" the object to provide that method. This is also known as the '**Extension Method**' pattern.
 
 Using an `implicit class`, I created a `collectTypes` method that could handle two types.
 
@@ -95,13 +95,13 @@ implicit class IterableOps[A](iterable: Iterable[A]) extends AnyVal {
 }
 ```
 
-This code worked wonderfully. However, it had a clear limitation: **the number of types you could filter for was fixed**. To handle three types, I'd have to create another overloaded method with three parameters. What if I needed to filter for 4, 5, or even 20 types? It was at this point that I decided I needed to use a technique that generates code at compile time: **Macros**.
+This code worked very well. However, it had a clear limitation: **the number of types you could filter for was fixed**. To handle three types, I'd have to create another overloaded method with three parameters. What if I needed to filter for 4, 5, or even 20 types? At this point, I decided I needed to use a technique that generates code at compile time: **Macros**.
 
 ## Third Improvement: First Steps with Scala 3 Macros
 
 > What is a Scala Macro?
 > 
-> A macro is "code that writes code." It runs **at compile time** to manipulate a program's Abstract Syntax Tree (AST) and generate new code. This allows you to eliminate repetitive boilerplate, achieve high levels of abstraction with no runtime penalty, and implement powerful, type-based logic at compile time.
+> A macro is "code that writes code." It runs **at compile time** to change a program's Abstract Syntax Tree (AST) and generate new code. This allows you to remove repetitive boilerplate. You can reach high levels of abstraction with no runtime penalty. You can also implement powerful, type-based logic at compile time.
 
 My goal was to create the following interface:
 
@@ -115,16 +115,16 @@ implicit class IterableOps[A](iterable: Iterable[A]) extends AnyVal {
 val (circles, squares, triangles) = shapes.collectTypes[(Shape.Circle, Shape.Square, Shape.Polygon.Triangle)]
 ```
 
-While there's a minor inconvenience of passing the type parameters as a `Tuple` (e.g., `collectTypes[(...)]`), it allows us to handle N types just by adding two parentheses `()`.
+There's a minor inconvenience: we have to pass the type parameters as a `Tuple` (e.g., `collectTypes[(...)]`). But it allows us to handle N types just by adding two parentheses `()`.
 
 ### The Code the Macro Will Write
 
-The core purpose of this macro is to have the compiler replace the `collectTypes` call with code that is even more efficient than our manual `foldLeft` version. When the compiler sees `shapes.collectTypes[(...)]`, it generates the following code right in its place.
+The main purpose of this macro is to have the compiler replace the `collectTypes` call. The new code is even more efficient than our manual `foldLeft` version. When the compiler sees `shapes.collectTypes[(...)]`, it generates the following code right in its place.
 
 The process that I want is:
 
 1. Create a `Builder` for each type.
-2. Iterate through the collection **only once**, using a `match` statement to add elements to the appropriate `Builder`.
+2. Iterate through the collection **only once**. Use a `match` statement to add elements to the correct `Builder`.
 3. Return a tuple containing the results from all `Builder`s.
 
 ```scala
@@ -153,19 +153,19 @@ The process that I want is:
 }
 ```
 
-This generated code is exactly what I want: clean, efficient, and hidden behind a simple, reusable method call.
+This generated code is exactly what I want. It is clean, efficient, and hidden behind a simple, reusable method call.
 
 ## Final Solution: A Macro with Compile-Time Safety
 
-After getting this far, I noticed a critical flaw. What would happen if I tried to filter for a type that has nothing to do with `Iterable[Shape]`, like `NotShape`?
+After getting this far, I noticed a critical flaw. Suppose I tried to filter for a type that has nothing to do with `Iterable[Shape]`, like `NotShape`. What would happen?
 
 ```scala
 val (circles, notShapes) = shapes.collectTypes[(Shape.Circle, NotShape)]
 ```
 
-The current macro doesn't check if the types passed to `collectTypes` are actually subtypes of the collection's element type (`Shape`). In this case, the code would compile successfully but would produce a bug at **runtime**, as the `NotShape` case in the `match` statement could never be reached, always returning an empty list. **Catching issues at compile time is one of the main motivations for using macros, after all.**
+The current macro doesn't check if the types passed to `collectTypes` are actually subtypes of the collection's element type (`Shape`). In this case, the code would compile successfully but would produce a bug at **runtime**. This is because the `NotShape` case in the `match` statement could never be reached. It would always return an empty list. **After all, catching issues at compile time is one of the main reasons for using macros.**
 
-So, I added subtype validation logic to the macro. First, when calling the macro from `IterableOps`, we pass along the collection's element type `A`.
+So, I added subtype validation logic to the macro. First, when calling the macro from `IterableOps`, we also pass the collection's element type `A`.
 
 ```scala
 // IterableOps.scala
@@ -197,7 +197,7 @@ def collectTypesImpl[A: Type, Ts <: Tuple: Type](...) = {
 }
 ```
 
-Now, the macro knows about type `A` and confirms that every type passed in the `Tuple` is a subtype of `A` at compile time. If the relationship doesn't hold, we get a helpful compile error.
+Now, the macro knows about type `A`. At compile time, it confirms that every type passed in the `Tuple` is a subtype of `A`. If this is not true, we get a helpful compile error.
 
 ```bash
 // When compiling code like shapes.collectTypes[(Shape.Circle, NotShape)]
@@ -207,14 +207,14 @@ Now, the macro knows about type `A` and confirms that every type passed in the `
 [error]    |Type com.example.NotShape is not a subtype of the Iterable element type com.example.Shape.
 ```
 
-This prevents runtime bugs at the source, creating a truly robust and safe solution.
+This prevents runtime bugs at the source. It creates a truly robust and safe solution.
 
 ## Conclusion
 
-- Starting from a simple collection filtering problem, my journey went through the following stages:
+- I started from a simple collection filtering problem and went through the following stages:
     1. **Problem Identification**: Multiple `collect` calls are inefficient.
     2. **First Improvement**: `foldLeft` is efficient but verbose and unintuitive.
-    3. **Second Improvement**: `implicit class` is user-friendly but lacks scalability for N types.
-    4. **Third Improvement**: A Scala macro can generate efficient code for N types, but it initially lacked compile-time safety checks.
-    5. **Final Solution**: By adding subtype validation, the Scala 3 macro became the ultimate solution, achieving **efficiency, type safety, and reusability**.
-- Macros are more than just a tool for reducing code; they are a powerful way to build the exact abstractions you want without any runtime cost. By combining Scala's strong type system with macros, I could solve complex requirements with code that is concise, safe, and efficient.
+    3. **Second Improvement**: `implicit class` is user-friendly, but it does not scale to N types.
+    4. **Third Improvement**: A Scala macro can generate efficient code for N types. However, it lacked compile-time safety checks at first.
+    5. **Final Solution**: I added subtype validation to the Scala 3 macro. This made it the ultimate solution, with **efficiency, type safety, and reusability**.
+- Macros are more than just a tool for reducing code. They are a powerful way to build the exact abstractions you want without any runtime cost. I combined Scala's strong type system with macros. This let me solve complex requirements with code that is short, safe, and efficient.

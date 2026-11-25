@@ -7,15 +7,15 @@ tags: ['db optimization', 'event sourcing', 'fp']
 
 ## Intro
 
-I currently work with an **Event Sourcing (ES)** architecture. One of the most interesting parts of ES is its database usage patterns. I always keep a close eye on how client requests create load on our database. In this post, I want to share an interesting DB load problem I faced and how I solved it. First, let's quickly go over what Event Sourcing is.
+I currently work with an **Event Sourcing (ES)** architecture. One of the most interesting parts of ES is its database usage patterns. I always watch closely how client requests create load on our database. In this post, I want to share an interesting DB load problem I faced and how I solved it. First, let's quickly go over what Event Sourcing is.
 
-## What is Event Sourcing?
+## What Is Event Sourcing?
 
-Event Sourcing is an architectural pattern where all changes to an application's state are stored as a sequence of events. Instead of just saving the _current_ state (the traditional way), ES carefully records _every_ event that led to that state, in the order they happened.
+Event Sourcing is an architectural pattern. It stores all changes to an application's state as a sequence of events. The traditional way is to save just the _current_ state. Instead, ES carefully records _every_ event that led to that state, in the order they happened.
 
 Typically, you only need two database tables to store an entity's state:
 
-- **Journal:** This table records all events in the order they happen, just like a detailed accounting ledger.
+- **Journal:** This table records all events in the order they happen. It is just like a detailed accounting ledger.
 
 ```sql
 CREATE TABLE IF NOT EXISTS journals (
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS journals (
 );
 ```
 
-- **Snapshot:** This table stores the application state at a specific point in time. Replaying all events from the journal to get the current state can be slow, so we save snapshots regularly to speed up recovery.
+- **Snapshot:** This table stores the application state at a specific point in time. Replaying all events from the journal to get the current state can be slow. So we save snapshots regularly to make recovery faster.
 
 ```sql
 CREATE TABLE IF NOT EXISTS snapshots (
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS snapshots (
 );
 ```
 
-As we develop new features, we often define new event types. However, **we don't need to change the `journals` or `snapshots` DB schema** each time. This is a huge benefit of Event Sourcing: the database usage pattern is very simple, so we don't have to worry about schema migrations for new features.
+As we develop new features, we often define new event types. However, **we don't need to change the `journals` or `snapshots` DB schema** each time. This is a huge benefit of Event Sourcing. The database usage pattern is very simple, so we don't have to worry about schema migrations for new features.
 
-"Update" requests work by publishing new events. "Get" requests work by loading the latest snapshot and then replaying any new events from the journal on top of it.
+"Update" requests work by publishing new events. "Get" requests work by loading the latest snapshot first. Then they replay any new events from the journal on top of it.
 
 Let's use a kingdom-building game as an example. When a user requests to 'establish a building,' two events are generated:
 
@@ -69,11 +69,11 @@ The game server gets the final user state by loading a snapshot and replaying th
 
 The `establishBuilding` feature already existed. It included various checks, like building location validation and user level checks, etc.
 
-Then, we got a new requirement: **a feature to build multiple buildings at once.** Instead of clicking the button 100 times to build 100 buildings, the user could just click a 'Build All' button once. This would be much more convenient.
+Then, we got a new requirement: **a feature to build multiple buildings at once.** Before, the user had to click the button 100 times to build 100 buildings. With this feature, the user could just click a 'Build All' button once. This would be much more convenient.
 
-How should we implement this? The existing `establishBuilding` function was stable. It had been through code reviews and QA, and was proven in our live environment. To reuse this stable logic, we considered calling it repeatedly, like `establishBuilding.replicateA(n)`.
+How should we implement this? The existing `establishBuilding` function was stable. It had been through code reviews and QA, and it was proven in our live environment. We wanted to reuse this stable logic. So we considered calling it repeatedly, like `establishBuilding.replicateA(n)`.
 
-We actually implemented it this way, and it worked fine on live. However, our metrics showed something suspicious. You've probably already guessed the problem. We were tracking a metric called `lifted-events-count`, which counts the events generated by a single RPC request.
+We actually implemented it this way, and it worked fine on live. However, our metrics showed something suspicious. You've probably already guessed the problem. We were tracking a metric called `lifted-events-count`. It counts the events generated by a single RPC request.
 
 ```scala
 // Part of the event persistence logic (conceptual code)
@@ -84,14 +84,14 @@ tracing.setAttribute("lifted-events-count", eventsToPersist.length)
 persistentEntityRepository.addEvents(eventsToPersist)
 ```
 
-And we discovered that an excessive number of events were being saved in a single transaction.
+And we discovered that too many events were being saved in a single transaction.
 
 ```sql
 // Query in Datadog
 env:prod-live-* and @lifted-events-count:>=80
 ```
 
-If a request was caught by this query, it meant a single RPC request was creating 80 or more events. We confirmed the `EstablishBuilding` RPC was triggering this and checked the DB state at that timestamp.
+If this query caught a request, it meant a single RPC request was creating 80 or more events. We confirmed that the `EstablishBuilding` RPC was triggering this. Then we checked the DB state at that timestamp.
 
 ![](../../assets/blogimages/journal-optimization-strategies/image-1.png)
 
@@ -99,10 +99,10 @@ I found **a huge number of repeated `BuildingEstablished` and `RewardReceived` p
 
 ## Two Approaches for DB Journaling Optimization
 
-To fix this, I needed to add some journaling optimization logic. The question was, _where_ should this logic live?
+To fix this, I needed to add some journaling optimization logic. The question was, _where_ should I put this logic?
 
-1. One option is in a **post-process layer**, which looks at all events after they are generated and merges them.
-2. The other is in the **domain logic layer**, which creates optimized (merged) events from the start.
+1. One option is in a **post-process layer**. This layer looks at all events after they are generated and merges them.
+2. The other is in the **domain logic layer**. This layer creates optimized (merged) events from the start.
 
 Let's look at both.
 
@@ -112,7 +112,7 @@ The first approach is to create an optimization process in a "post-process" laye
 
 In our example (building 100 buildings), this layer would see 200 events (100 pairs of `BuildingEstablished` -> `RewardReceived`). It would then optimize them into just two aggregated events: `BuildingsEstablished(buildings)` and `RewardsReceived(rewards)`.
 
-To do this, we'd need an `EventOptimizer` that recognizes the `BuildingEstablished` -> `RewardReceived` pattern and converts it.
+To do this, we'd need an `EventOptimizer`. It would recognize the `BuildingEstablished` -> `RewardReceived` pattern and convert it.
 
 ```scala
 /**
@@ -153,23 +153,23 @@ The big advantage here is that the domain logic stays clean. The domain can stil
 
 #### Cons
 
-However, there are serious downsides. If a new feature is added to the logic layer that breaks this pattern, the post-process optimizer might break.
+However, there are serious downsides. A new feature in the logic layer may break this pattern. If that happens, the post-process optimizer might break too.
 
-For example, imagine a new requirement where building costs a resource (`Paid`). The journal pattern would become: `BuildingEstablished` -> `Paid` -> `RewardReceived` -> `BuildingEstablished` -> `Paid` -> `RewardReceived` -> ... The old optimizer, which was designed to find `BuildingEstablished` -> `RewardReceived` pairs, would stop working.
+For example, imagine a new requirement where building costs a resource (`Paid`). The journal pattern would become: `BuildingEstablished` -> `Paid` -> `RewardReceived` -> `BuildingEstablished` -> `Paid` -> `RewardReceived` -> ... The old optimizer was designed to find `BuildingEstablished` -> `RewardReceived` pairs. It would stop working.
 
-Another risk is that post-processing can **damage the integrity of the events**, which is a core strength of Event Sourcing. Event optimization can lead to the loss of the original result.
+Another risk is that post-processing can **damage the integrity of the events**. This integrity is a core strength of Event Sourcing. Event optimization can cause the original result to be lost.
 
-For example, let's say we aggregate the `BuildingEstablished` -> `Paid` -> `RewardReceived` -> ... pattern into three aggregated events: `BuildingsEstablished`, `Paids`, and `RewardsReceived`. If the original `Paid` event decreased `itemId1` by 1, the aggregated `Paids` event might decrease `itemId1` by `n` all at once.
+For example, let's say we aggregate the `BuildingEstablished` -> `Paid` -> `RewardReceived` -> ... pattern. We turn it into three aggregated events: `BuildingsEstablished`, `Paids`, and `RewardsReceived`. Suppose the original `Paid` event decreased `itemId1` by 1. Then the aggregated `Paids` event might decrease `itemId1` by `n` all at once.
 
-The result of **(pay -1, get reward +1) repeated _n_ times** can be different from the result of **(pay -_n_, get reward +_n_) done once**. The second case might fail if the item count drops below zero. Or, if the item has a `.max(0)` control to prevent it from going negative, it wouldn't fail but the final state could be different. In other words, event aggregation can subtly change the flow of state changes and cause unexpected side effects.
+The result of **(pay -1, get reward +1) repeated _n_ times** can be different from the result of **(pay -_n_, get reward +_n_) done once**. The second case might fail if the item count drops below zero. Or the item may have a `.max(0)` control to prevent it from going negative. Then it wouldn't fail, but the final state could be different. In other words, event aggregation can change the flow of state changes in ways that are hard to notice. It can also cause unexpected side effects.
 
-Because of this, the post-process approach is more suitable for **simple, repetitive patterns of a _single_ event type**, (e.g., `RewardReceived` -> `RewardReceived` -> ...). It's generally **not recommended** for complex patterns involving multiple event types that are deeply connected to changing domain logic.
+Because of this, the post-process approach is more suitable for **simple, repetitive patterns of a _single_ event type**, (e.g., `RewardReceived` -> `RewardReceived` -> ...). It's generally **not recommended** for complex patterns with multiple event types that are deeply connected to changing domain logic.
 
-### Approach 2: Emitting Merged Events from the Domain Logic Layer ✅
+### Approach 2: Emitting Merged Events from the Domain Logic Layer
 
-The best solution for our specific problem, and the one we ultimately chose, was to **emit aggregated events directly from the domain logic layer.** This optimizes events at their source. We define and emit new aggregated events like `BuildingsEstablished` and `RewardsReceived` from within the domain logic itself.
+The best solution for our specific problem was to **emit aggregated events directly from the domain logic layer.** This is the one we chose in the end. It optimizes events at their source. We define new aggregated events like `BuildingsEstablished` and `RewardsReceived`. We emit them from within the domain logic itself.
 
-Back to our game example: for 100 simultaneous building constructions, instead of emitting 100 pairs of `BuildingEstablished` and `RewardReceived`, we emit just two aggregated events: a single `BuildingsEstablished` event containing all built buildings, and a single `RewardsReceived` event containing all earned rewards.
+Let's go back to our game example, with 100 buildings built at the same time. We no longer emit 100 pairs of `BuildingEstablished` and `RewardReceived`. Instead, we emit just two aggregated events. A single `BuildingsEstablished` event contains all built buildings. A single `RewardsReceived` event contains all earned rewards.
 
 ```scala
 // Emits 2 * n events (BuildingEstablished, RewardReceived)
@@ -205,24 +205,24 @@ def establishBuildings(buildings: List[Building]): ZPure[Event, GameState, GameS
 
 #### Pros
 
-This approach drastically reduces the DB journal load by emitting only two events (`BuildingsEstablished(...)` and `RewardsReceived(...)`) instead of hundreds. And the likelihood of the domain logic being damaged by the optimizer is low. This is because the optimizer itself is part of the domain logic, so when new features are introduced, it is unlikely that one will be considered without the other.
+This approach greatly reduces the DB journal load. It emits only two events (`BuildingsEstablished(...)` and `RewardsReceived(...)`) instead of hundreds. Also, the optimizer is unlikely to damage the domain logic. This is because the optimizer itself is part of the domain logic. So when new features are introduced, it is unlikely that one will be considered without the other.
 
 #### Cons
 
-However, this method makes the domain logic a bit messier and increases implementation difficulty. It must be written carefully to ensure the state change is logically identical to calling `buildings.traverse(establishBuilding)` for all scenarios. There's definitely room for error, and using `buildings.traverse(establishBuilding)` feels cleaner and more intuitive. But for the sake of performance, I often find this level of added complexity in the domain logic acceptable.
+However, this method makes the domain logic a bit messier and harder to implement. It must be written carefully. For all scenarios, the state change must be logically identical to calling `buildings.traverse(establishBuilding)`. It is definitely possible to make mistakes, and using `buildings.traverse(establishBuilding)` feels cleaner and more intuitive. But to get better performance, I often find this level of added complexity in the domain logic acceptable.
 
 ## Why Event Sourcing Makes This Optimization Possible
 
-Before we finish, I want to revisit _why_ Event Sourcing makes these kinds of optimizations possible. It's because its DB usage pattern is so simple.
+Before we finish, I want to look again at _why_ Event Sourcing makes these kinds of optimizations possible. It's because its DB usage pattern is so simple.
 
-**First, the schema is simple.** In a traditional SQL (relational database) approach, we would need a `buildings` table to store building info and a `rewards` table (or update a `user_items` table). To optimize a "build multiple" feature, we'd have to think about "bulk inserts" (`INSERT INTO buildings ... VALUES (...), (...), ...`) or "bulk updates" for the `user_items` table. This means the **application logic is tightly coupled with the DB schema.** In Event Sourcing, the schema is just the `journals` table, so we can focus only on the _logical_ optimization of "combining events" at the application level.
+**First, the schema is simple.** In a traditional SQL (relational database) approach, we would need a `buildings` table to store building info. We would also need a `rewards` table (or update a `user_items` table). To optimize a "build multiple" feature, we'd have to think about "bulk inserts" (`INSERT INTO buildings ... VALUES (...), (...), ...`) or "bulk updates" for the `user_items` table. This means the **application logic is tightly coupled with the DB schema.** In Event Sourcing, the schema is just the `journals` table. So we can focus only on the _logical_ optimization of "combining events" at the application level.
 
-**Second, emitting events is separate from saving (persisting) them.** In ES, a DB access doesn't happen the instant an event is "emitted." The event is just an "Effect" that has been declared. In our project, the act of _emitting_ an event and the act of _persisting_ it to the database are naturally separated. This lets us delay the actual process of saving the event to the DB, and this "lazy space" gives us room to consider various optimization strategies easily. Because these two actions are separate, we get the flexibility to collect and optimize events _before_ they are finally written to the DB.
+**Second, emitting events is separate from saving (persisting) them.** In ES, a DB access doesn't happen at the moment an event is "emitted." The event is just an "Effect" that has been declared. In our project, the act of _emitting_ an event and the act of _persisting_ it to the database are naturally separated. This lets us delay the actual process of saving the event to the DB. This "lazy space" gives us room to consider various optimization strategies easily. Because these two actions are separate, we have the flexibility to collect and optimize events _before_ they are finally written to the DB.
 
 ## Conclusion
 
-The first **post-process approach** offers the benefit of keeping the domain logic clean. It allows developers to avoid constantly worrying about the number of events emitted from complex domain logic. This method is effective for simple, repetitive patterns, like `RewardReceived` appearing in many parts of the logic. However, you must remember that it **carries the risk of damaging the integrity of the event history.**
+The benefit of the first **post-process approach** is that it keeps the domain logic clean. Developers do not have to worry all the time about the number of events emitted from complex domain logic. This method works well for simple, repetitive patterns, like `RewardReceived` appearing in many parts of the logic. However, you must remember that it **has the risk of damaging the integrity of the event history.**
 
-In contrast, the second approach—**emitting merged events from the logic layer**—optimizes at the source. It provides a more fundamental and stable solution. The trade-off is that the domain logic becomes more complex because it has to include event aggregation logic.
+In contrast, the second approach is **emitting merged events from the logic layer**, so it optimizes at the source. It provides a more fundamental and stable solution. The trade-off is that the domain logic becomes more complex. This is because it has to include event aggregation logic.
 
-In our project, we see both approaches as valid and apply them appropriately based on their pros and cons.
+In our project, we see both approaches as valid. We use them where they fit, based on their pros and cons.

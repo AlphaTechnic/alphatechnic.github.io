@@ -12,11 +12,11 @@ There are theoretical approaches to avoid collisions in hash maps:
 - **Separate chaining**
 - **Open addressing**
 
-Which approach does Python use internally? If you dig into CPython’s implementation, you can see it quite easily, and the comments explaining it are beautifully written.
+Which approach does Python use internally? You can see it quite easily if you look into CPython’s implementation. The comments that explain it are beautifully written.
 
 ## Explanation in CPython
 
-- The explanatory comments written below are linked here [https://github.com/python/cpython/blob/2f1ecb3bc474a5895dce090cca7b8afe7b560040/Objects/dictobject.c#L291-L381](https://github.com/python/cpython/blob/2f1ecb3bc474a5895dce090cca7b8afe7b560040/Objects/dictobject.c#L291-L381).
+- The comments below explain the approach, and they are linked here [https://github.com/python/cpython/blob/2f1ecb3bc474a5895dce090cca7b8afe7b560040/Objects/dictobject.c#L291-L381](https://github.com/python/cpython/blob/2f1ecb3bc474a5895dce090cca7b8afe7b560040/Objects/dictobject.c#L291-L381).
 
 ```text
 Major subtleties ahead:  Most hash schemes depend on having a "good" hash
@@ -114,7 +114,7 @@ equally good collision statistics, needed less code & used less memory.
 
 ## Big Concepts
 
-- Python’s `dict` resolves hash collisions using an **open addressing** scheme.
+- Python’s `dict` resolves hash collisions with an **open addressing** scheme.
 - The Python hash table is stored as a **contiguous block of memory** (like an array).
 - To handle collisions, it uses a “perturbation” strategy to vary the probe indices.
 - Each slot in the table can hold **exactly one item**.
@@ -129,12 +129,12 @@ When a new dict is initialized, it starts with 8 slots. (Defined in `Include/dic
 
 > **“Most important hash functions (for strings and ints) are very regular in common cases.”**
 
-Two key qualities of a good hash function are likely the following:
+A good hash function likely has these two key qualities:
 
 1. **Fast computation**
 2. **Minimizing collisions**
 
-Here, **very regular** describes the hash functions themselves: for example, the ints `0, 1, 2, 3` simply hash to `0, 1, 2, 3`. The CPython comments explain that this isn’t necessarily bad. In a table of size `2**i`, `taking the low-order i bits` as the initial table index is **extremely fast**, and a contiguous range of ints causes no collisions at all.
+Here, **very regular** describes the hash functions themselves. For example, the ints `0, 1, 2, 3` simply hash to `0, 1, 2, 3`. The CPython comments explain that this isn’t necessarily bad. In a table of size `2**i`, `taking the low-order i bits` as the initial table index is **extremely fast**. Also, a contiguous range of ints causes no collisions at all.
 
 ## Collision
 
@@ -143,7 +143,7 @@ j = ((5*j) + 1) mod 2**i;
 ```
 
 - How are collisions handled? Python updates the probe index using the recurrence:
-    - This formula is proven to visit every slot exactly once before repeating.
+    - This formula is proven to visit every slot exactly once before it repeats.
 
 ```text
 j = (5*j) + 1 + perturb;
@@ -151,11 +151,11 @@ perturb >>= PERTURB_SHIFT;
 use j % 2**i as the next table index;
 ```
 
-- On top of that, Python adds a “`perturb`” value drawn from the full hash code
-    - The `PERTURB_SHIFT` constant balances how quickly high-order bits of the hash influence the sequence.
-    - Its value `5` was chosen because Tim Peters found it minimized total collisions across both normal and pathological cases (although `4` and `6` performed similarly).
-    - Over iterations, `perturb` shifts right until it becomes zero, at which point the probe follows just `5*j+1`.
-    - Since one empty slot is guaranteed, this sequence will eventually find it.
+- Python also adds a “`perturb`” value, which comes from the full hash code
+    - The `PERTURB_SHIFT` constant balances how quickly high-order bits of the hash affect the sequence.
+    - Its value is `5`. Tim Peters found that this value minimized total collisions across both normal and pathological cases (although `4` and `6` performed similarly).
+    - Over iterations, `perturb` shifts right until it becomes zero. At that point, the probe follows just `5*j+1`.
+    - One empty slot is guaranteed, so this sequence will eventually find it.
 
 ## Slot Index Lookup
 
@@ -207,20 +207,20 @@ do_lookup(PyDictObject *mp, PyDictKeysObject *dk, PyObject *key, Py_hash_t hash,
 
 **Initialization:**
 
-- `i = hash & mask` – Compute the initial index using the lower bits of the hash.
+- `i = hash & mask` – Compute the initial index from the lower bits of the hash.
 - `perturb = hash` – Initialize `perturb` with the full hash value.
 
 **Infinite loop (`for (;;)`):**
 
-- `ix = dictkeys_get_index(dk, i)` – Retrieve the index at the current position.
-- If `ix >= 0`, an entry exists; compare the key using the `check_lookup` callback.
+- `ix = dictkeys_get_index(dk, i)` – Get the index at the current position.
+- If `ix >= 0`, an entry exists. In this case, compare the key using the `check_lookup` callback.
 - If `ix == DKIX_EMPTY`, return that the key is not found.
 - `perturb >>= PERTURB_SHIFT` – Right-shift the `perturb` value.
 - `i = mask & (i*5 + perturb + 1)` – Compute the next index (recurrence relation).
 
 **Manual loop unrolling:**
 
-- Repeat the loop body twice for performance optimization.
+- Repeat the loop body twice to optimize performance.
 
 ## Finding Empty Slots
 
@@ -255,7 +255,7 @@ find_empty_slot(PyDictKeysObject *keys, Py_hash_t hash)
 }
 ```
 
-Here is the routine that finds an empty slot when inserting a new key. Since `perturb` is deterministic rather than random, we can apply the similar logic used for finding an empty slot and lookup as well.
+Here is the routine that finds an empty slot when inserting a new key. The `perturb` value is deterministic, not random. Because of this, we can use similar logic for both finding an empty slot and lookup.
 
 ## Conclusion
 
