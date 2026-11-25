@@ -1,6 +1,6 @@
 ---
 title: 'Trading 100% Certainty for 99.99% Efficiency'
-description: 'I''d like to share my experience applying the Monte Carlo algorithm to solve a problem I encountered in my work. It was a fascinating journey that showed how...'
+description: 'How I used the Monte Carlo algorithm to quickly find a board with no bingo, with a small and acceptable risk of failure.'
 pubDate: 2025-10-26
 tags: ['Miller-Rabin', 'monte carlo', 'non-deterministic', 'probablistic']
 ---

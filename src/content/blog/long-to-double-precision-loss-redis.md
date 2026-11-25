@@ -1,6 +1,6 @@
 ---
 title: 'IEEE 754 Distorts My Ranking System'
-description: 'In this post, I want to share a detailed account of an interesting issue I encountered with our Redis-based ranking system.'
+description: 'Scores in our Redis ranking were slightly wrong. The cause was converting a 64-bit Long to a Double, which has only 53 bits of precision.'
 pubDate: 2025-10-12
 tags: ['floating-point number', 'IEEE754', 'precision', 'redis', 'Sorted Set']
 ---

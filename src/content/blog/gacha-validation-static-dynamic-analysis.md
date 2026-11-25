@@ -1,6 +1,6 @@
 ---
 title: 'Building Static and Dynamic Gacha Validation Systems'
-description: 'I''m a developer working on a game development team. I want to share a story about a critical issue I faced and the systems I built to resolve it. It’s a...'
+description: 'A user got an item that was not on the rate table. I built a static check and a simulator to prevent this kind of bug.'
 pubDate: 2025-06-27
 tags: ['gacha', 'probability', 'random']
 ---

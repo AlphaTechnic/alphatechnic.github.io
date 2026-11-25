@@ -1,6 +1,6 @@
 ---
 title: 'Covariance, Contravariance'
-description: 'At its core, variance is about how the subtype relationship of a type parameter influences the subtype relationship of a generic type itself. It addresses...'
+description: 'What covariance and contravariance mean, and why they depend on whether a type is used as an output or an input.'
 pubDate: 2025-06-22
 tags: ['contravariance', 'Covariance', 'fp']
 ---

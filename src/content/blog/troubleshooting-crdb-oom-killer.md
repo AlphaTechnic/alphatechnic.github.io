@@ -1,6 +1,6 @@
 ---
 title: 'The Mysterious CRDB OOM Killer'
-description: 'I recently ran into an Out-of-Memory (OOM) error with CockroachDB (CRDB) in our development environment. I want to share the story of how I detected the...'
+description: 'A TTL job in CockroachDB used too much memory. I find out why a simple delete reads so much data, and fix it with smaller batches.'
 pubDate: 2025-08-18
 tags: ['cockroachdb', 'crdb', 'TTL', 'ttl_job_cron']
 ---

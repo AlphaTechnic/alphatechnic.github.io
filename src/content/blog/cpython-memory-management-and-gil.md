@@ -1,6 +1,6 @@
 ---
 title: 'CPython Memory Management and the GIL'
-description: 'In Python, specifically the CPython implementation, managing memory is less about "deleting files" and more about managing labels. A common misconception is...'
+description: 'How CPython manages memory with reference counting and garbage collection, and why it needs the GIL.'
 pubDate: 2025-05-17
 tags: ['gil', 'gc', 'python']
 ---

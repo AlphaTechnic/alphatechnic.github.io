@@ -1,6 +1,6 @@
 ---
 title: 'The Hidden Trap of Scala lazy val and Kryo Serialization'
-description: 'While monitoring our live services, we ran into an exception that should not happen in a statically typed language like Scala: a type conversion error at...'
+description: 'A ClassCastException appeared after we moved to Scala 3. Kryo was serializing a lazy val that was still being computed.'
 pubDate: 2026-08-09
 tags: ['ClassCastException', 'kryo', 'lazy val', 'scala']
 ---

@@ -1,6 +1,6 @@
 ---
 title: 'One Pass, N Types: Efficient Type Filtering with Scala 3 Macros'
-description: 'When developing, we often need to iterate over a collection and pick out only the elements of specific types. This seems like a simple task, but what''s the...'
+description: 'How to pick elements of N types from a collection in one pass, step by step, from foldLeft to Scala 3 macros.'
 pubDate: 2025-08-17
 tags: ['macro', 'scala']
 ---

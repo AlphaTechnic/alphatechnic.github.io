@@ -1,6 +1,6 @@
 ---
 title: 'Building a Reliable Server Maintenance with ZIO'
-description: 'I want to share my journey to improve our server maintenance process by adopting ZIO. I''ll walk you through my experiences, why I chose ZIO, and how I...'
+description: 'Our server maintenance was manual and risky. I built an interactive tool for it with ZIO, Scala-CLI, and Scopt.'
 pubDate: 2025-06-27
 tags: ['fp', 'scala-cli', 'scopts', 'scripts', 'zio']
 ---

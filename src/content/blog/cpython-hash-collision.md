@@ -1,6 +1,6 @@
 ---
 title: 'How CPython Handles Hash Collisions'
-description: 'Separate chaining or open addressing? CPython''s source shows how dict resolves hash collisions with open addressing and a perturbed probe sequence.'
+description: 'Separate chaining or open addressing? I read CPython''s source to see how dict handles hash collisions.'
 pubDate: 2022-04-21
 tags: ['cpython', 'Hash Collision']
 ---

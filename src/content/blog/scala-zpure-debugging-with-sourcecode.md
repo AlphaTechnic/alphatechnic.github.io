@@ -1,6 +1,6 @@
 ---
-title: 'Solving the Ambiguous Error Problem in Trampolined Effects using Compile-Time Macros'
-description: 'Scala''s implicit keyword is incredibly powerful, often praised for enabling elegant DSLs, type class patterns, and dependency injection. However, for those...'
+title: 'Solving the Ambiguous Error Problem in Trampolined Effects Using Compile-Time Macros'
+description: 'ZPure errors did not show where they came from. I used implicit parameters and the sourcecode library to add the caller''s location.'
 pubDate: 2025-06-22
 tags: ['Implicit', 'scala', 'sourcecode']
 ---

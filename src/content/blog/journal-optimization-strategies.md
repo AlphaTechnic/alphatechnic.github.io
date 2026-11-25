@@ -1,6 +1,6 @@
 ---
 title: 'Journal Optimization Strategies in Event Sourcing DB Architecture'
-description: 'I currently work with an Event Sourcing (ES) architecture. One of the most interesting parts of ES is its database usage patterns. I always keep a close eye...'
+description: 'One request saved too many events in our Event Sourcing DB. I compare two ways to merge them.'
 pubDate: 2025-06-23
 tags: ['db optimization', 'event sourcing', 'fp']
 ---
