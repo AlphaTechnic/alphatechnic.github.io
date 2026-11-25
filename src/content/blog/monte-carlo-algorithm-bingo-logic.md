@@ -2,7 +2,7 @@
 title: 'Trading 100% Certainty for 99.99% Efficiency'
 description: 'How I used the Monte Carlo algorithm to quickly find a board with no bingo, with a small and acceptable risk of failure.'
 pubDate: 2025-10-26
-tags: ['Miller-Rabin', 'monte carlo', 'non-deterministic', 'probablistic']
+tags: ['Miller-Rabin', 'monte carlo', 'non-deterministic', 'probabilistic']
 ---
 
 ## Intro
@@ -150,7 +150,7 @@ Let's assume an extreme case where the number of cells to select is close to N x
 
 That's about 4.9%, which is still hard to ignore. But suppose the probability of a 'Losing Hand' is just 5% (a 95% chance of bingo). Then the failure rate becomes:
 
-`(0.95)^300 ≈ 0.000000155`
+`(0.95)^300 ≈ 0.000000208`
 
 The probability gets very close to zero. Our game has a very large number of users, so even this tiny number might not be 100% reassuring. However, we can add a static validation step during the planning phase. This step ensures that the probability of a 'non-bingo' combination stays above a certain threshold. With this step, the method becomes a solution that is stable and efficient enough.
 
@@ -176,7 +176,7 @@ The method tries to find definite proof that a number is **composite** (not prim
 
 So, if we repeat the test 10 times, the probability of wrongly identifying a composite number as a prime number drops to:
 
-`(1/4)^10 ≈ ****0.00000095`
+`(1/4)^10 ≈ 0.00000095`
 
 This means we can be over 99.9999% certain that the number is prime. It's not a perfect 100%. But it is considered reliable enough to secure cryptographic systems.
 
