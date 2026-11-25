@@ -34,7 +34,9 @@ const coverImagePath = `/src/assets/blogimages/${post.id}/cover.jpg`
 	<p class="line-clamp-3 opacity-80">
 		{post.data.description}
 	</p>
-	<p class="uppercase text-sm mt-auto tracking-tight">
+	<p
+		class="uppercase text-sm mt-auto tracking-tight text-primary dark:text-primary-dark"
+	>
 		<FormattedDate date={post.data.pubDate} />
 	</p>
 </a>

@@ -6,7 +6,8 @@ import {
 	isExternal,
 	resolveUrl,
 } from '../consts'
-import LogoSVG from '../assets/logo.svg'
+import { Image } from 'astro:assets'
+import logo from '../assets/logo.png'
 import { Icon } from 'astro-icon/components'
 ---
 
@@ -16,7 +17,14 @@ import { Icon } from 'astro-icon/components'
 	>
 		<div>
 			<a href={`${SITE_BASE}/`} class="block w-fit" aria-label="Home">
-				<LogoSVG height={36} width={36} />
+				<Image
+					src={logo}
+					alt=""
+					width={40}
+					height={40}
+					densities={[1, 2, 3]}
+					class="rounded-full"
+				/>
 			</a>
 		</div>
 		<div>

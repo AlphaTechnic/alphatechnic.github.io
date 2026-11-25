@@ -6,13 +6,23 @@
 @theme {
 	--font-sans: 'Inter Variable', sans-serif;
 	--font-mono: 'JetBrains Mono Variable', monospace;
+	--font-heading: 'IBM Plex Sans Variable', sans-serif;
 
 	--color-foreground: #0c0c0c;
 	--color-foreground-dark: #fafafa;
-	--color-background: #ffffff;
-	--color-background-dark: #2b2b2b;
-	--color-primary: #0784b5;
-	--color-primary-dark: #9bd4e4;
+	--color-background: #f8fbfa;
+	--color-background-dark: #16201e;
+	--color-primary: #0f766e;
+	--color-primary-dark: #5fd3bc;
+}
+
+@layer base {
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: var(--font-heading);
+	}
 }
 
 html {
@@ -41,7 +51,7 @@ html {
 }
 
 .posts-grid-container {
-	@apply grid my-6 md:grid-cols-2 xl:grid-cols-4 gap-6;
+	@apply grid my-6 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-6;
 }
 
 /* Post content */
