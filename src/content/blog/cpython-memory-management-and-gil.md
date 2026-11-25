@@ -5,6 +5,10 @@ pubDate: 2025-05-17
 tags: ['gil', 'gc', 'python']
 ---
 
+## Intro
+
+CPython manages memory with **reference counting** and a **generational garbage collector (GC)**. It also has the **Global Interpreter Lock (GIL)**, which lets only one thread run Python bytecode at a time. In this post, I look at how each of them works and why CPython uses them together.
+
 ## The Life Cycle of a Python Object
 
 In Python, specifically the `CPython` implementation, managing memory is less about "deleting files" and more about managing **labels**. A common misconception is that the `del` statement destroys an object. In reality, `del` only removes the **binding** between a name and an object. Consider this classic scenario:
@@ -94,6 +98,6 @@ The primary advantage of this combination is **simplicity and stability**. For d
 
 However, this architectural choice comes with a clear trade-off: the **Multi-core Bottleneck**. In an era where even smartphones have octa-core processors, CPython's inability to run pure Python code in parallel across multiple CPUs can feel like a relic of the past. For CPU-intensive tasks—like calculating prime numbers or complex data processing in pure Python—the GIL turns multithreading into a game of "musical chairs" where only one thread can sit (execute) at a time, leading to wasted hardware potential. Additionally, while the Generational GC handles circular references, it does so in a `stop-the-world` fashion, which, combined with the GIL, can occasionally cause minor "stutters" in high-performance, real-time applications.
 
-### The Pragmatic Reality
+## Conclusion
 
 Ultimately, the combination of Reference Counting and the GIL represents CPython’s **pragmatic philosophy**. It prioritizes the "common case"—fast single-threaded execution and easy integration with C—over the "edge case" of multi-core pure Python parallelism. While modern projects like _Free-threaded Python (PEP 703)_ are currently working to make the GIL optional, for decades this duo has provided the stability that allowed Python to become the world's most popular language for data science and web development. By understanding that the GIL exists to protect the speed of Reference Counting, you can better navigate when to use threads for I/O and when to switch to `multiprocessing` or C-extensions for raw power.

@@ -434,7 +434,7 @@ import cue4s.*
 
 In the long term, I aim to move the management and execution of this scenario to a web-based platform. My ultimate goal is to build a system that allows us to **integrate with a database**, and then add, modify, delete steps, visualize execution history, and even trigger executions directly from a web page. This would create an even more intuitive and collaborative maintenance process.
 
-## Summary
+## Conclusion
 
 - My team aimed to solve the inefficiencies and human error risks associated with our traditional manual server maintenance methods. To achieve this, I developed an **automated server maintenance prompt using ZIO**.
 - **ZIO's powerful type system and functional approach** enabled clear management of maintenance configurations (via the `R` type), robust error handling, and easy implementation of complex concurrency tasks (parallel execution). Furthermore, **Scala-CLI** streamlined the script's development and deployment, and **Scopt** helped us build a user-friendly command-line interface.

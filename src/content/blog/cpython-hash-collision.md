@@ -256,3 +256,7 @@ find_empty_slot(PyDictKeysObject *keys, Py_hash_t hash)
 ```
 
 Here is the routine that finds an empty slot when inserting a new key. Since `perturb` is deterministic rather than random, we can apply the similar logic used for finding an empty slot and lookup as well.
+
+## Conclusion
+
+CPython resolves hash collisions with **open addressing**. It picks the first slot from the low bits of the hash, which is very fast. When a collision happens, it uses the recurrence `5*j + 1` together with `perturb`. This way, the other bits of the hash also help to choose the next slot. Lookup and insertion follow the same probe order.

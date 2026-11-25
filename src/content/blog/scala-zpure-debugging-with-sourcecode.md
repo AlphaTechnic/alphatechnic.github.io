@@ -56,7 +56,7 @@ Sure, we could have forced `context` to be mandatory, but manually updating hund
 
 ## ZPure Trampoline
 
-#### How Does ZPure Implement Its Trampoline?
+### How Does ZPure Implement Its Trampoline?
 
 Functional effect systems like **ZIO** and **ZPure** use a technique called a **trampoline** as a core mechanism to ensure **stack safety**. Instead of making deep, recursive calls that grow the JVM call stack, a trampoline evaluates each step of a computation within a loop, keeping the physical call stack flat.
 
@@ -84,7 +84,7 @@ main
 
 ⇒ It always “jumps” to the next computation from the same location (i.e., the same stack frame). I’d like to cover this topic in a separate post later.
 
-#### Internal Loop Pseudo-code
+### Internal Loop Pseudo-code
 
 This execution process is implemented with a `while` loop that looks something like this. The function `f` passed to `flatMap` or `map` is pushed onto a stack data structure. When a `Succeed` is encountered, a function is popped from the stack and applied to the value.
 
@@ -152,7 +152,7 @@ As a result, even when an error occurs in the `Fail` case, you cannot trace the 
 
 My solution came from Scala's `implicit` parameters and the **`sourcecode`** library ([https://github.com/com-lihaoyi/sourcecode](https://github.com/com-lihaoyi/sourcecode)). `sourcecode` injects source code information (like file name, line number, and enclosing function name) at **compile time using macros**. This is crucial because, as its documentation states:
 
-> sourcecode does not rely on runtime reflection or stack inspection, and is done at compile-time using macros. This means that it is both orders of magnitude faster than e.g. getting file-name and line-numbers using stack inspection, and also works on Scala.js where reflection and stack inspection can't1 be used.
+> sourcecode does not rely on runtime reflection or stack inspection, and is done at compile-time using macros. This means that it is both orders of magnitude faster than e.g. getting file-name and line-numbers using stack inspection, and also works on Scala.js where reflection and stack inspection can't be used.
 
 This makes it fast and compatible with environments like `Scala.js` where runtime reflection isn't an option. The magic happens when `sourcecode`'s types, like `sourcecode.FullName` and `sourcecode.Line`, are included as `implicit` parameters in a function signature. If no explicit value is provided for these `implicit`s in the calling scope, the compiler **automatically provides them** based on the current call site's information.
 

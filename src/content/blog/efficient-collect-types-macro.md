@@ -209,7 +209,7 @@ Now, the macro knows about type `A` and confirms that every type passed in the `
 
 This prevents runtime bugs at the source, creating a truly robust and safe solution.
 
-## Conclusion and Summary
+## Conclusion
 
 - Starting from a simple collection filtering problem, my journey went through the following stages:
     1. **Problem Identification**: Multiple `collect` calls are inefficient.
