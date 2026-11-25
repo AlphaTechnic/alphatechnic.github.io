@@ -11,7 +11,7 @@ I recently ran into an Out-of-Memory (OOM) error with CockroachDB (CRDB) in our 
 
 ## The Mysterious OOM Killer
 
-Our QA team reported that they couldn't connect to the server. I quickly checked the server states and found the logs of our CRDB pod. The pod had crashed due to an Out-of-Memory (OOM) error. At first, I was confused. It seemed strange for a database to fail because of a lack of memory rather than disk space. Disk space also reached its limit in the end, because failures of the `DELETE` queries had been adding up.
+Our QA team reported that they couldn't connect to the server. I quickly checked the server states and found the logs of our CRDB pod. The pod had crashed due to an Out-of-Memory (OOM) error. `kubectl describe pod` showed `OOMKilled`, which means that the kernel had killed it. At first, I was confused. It seemed strange for a database to fail because of a lack of memory rather than disk space. Disk space also reached its limit in the end, because failures of the `DELETE` queries had been adding up.
 
 ![](../../assets/blogimages/troubleshooting-crdb-oom-killer/image-1.png)
 
@@ -122,7 +122,11 @@ This **100-row delete batch** was the main cause of the problem. `TakeSnapshot` 
 
 > 100 rows \* 2MB per row ≈ 200MB
 
-One such transaction needs nearly 200MB. That is about 75% of the node's memory budget (268,435,456 bytes, or about 268MB). The error log shows that 267,192,320 bytes were already allocated. There was not enough room for one more 2MB row. I had confirmed that the TTL job was exceeding its memory budget. But one basic question remained: "Why does a simple delete operation need so much memory?" Shouldn't it just remove the data directly from the disk?
+One such transaction needs nearly 200MB. That is about 75% of the node's memory budget (268,435,456 bytes, or about 268MB). The error log shows that 267,192,320 bytes were already allocated. There was not enough room for one more 2MB row.
+
+This error only makes the query fail. It does not stop the process. But the SQL memory budget does not cover all the memory that CockroachDB uses. With the budget almost full, the pod went over its own memory limit, and the kernel killed it.
+
+I had confirmed that the TTL job was exceeding its memory budget. But one basic question remained: "Why does a simple delete operation need so much memory?" Shouldn't it just remove the data directly from the disk?
 
 ## Why Does a Delete Operation Use Memory?
 
