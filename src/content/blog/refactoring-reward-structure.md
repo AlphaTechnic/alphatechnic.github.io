@@ -262,7 +262,7 @@ This method costs more, though. The migration logic has to read the old value. S
 
 ### A Last-Minute Bug and ForDeprecated
 
-I thought I was done, but at the last minute I found a bug that made replay fail. The cause was the gacha history (`GachaHistory`). The gacha history is stored in the user state, and it holds the Rewards the user received as they are. So old gacha history still had rewards in the old structure, such as the old `ConvertedReward`.
+I thought I was done. But at the last minute, I found a bug that made replay fail. I found it while reading heavy users' snapshots with the old and new images and comparing them. The cause was the gacha history (`GachaHistory`). The gacha history is stored in the user state, and it holds the Rewards the user received as they are. So old gacha history still had rewards in the old structure, such as the old `ConvertedReward`.
 
 But at first, I had deleted these old reward types from the proto. So when we read old gacha history, those places were read as empty. An empty reward can't be turned into a domain object, so reading failed with an error. This is the "replay fails completely" case from above.
 
@@ -293,7 +293,7 @@ There were two criteria for verification.
 1. Data in the DB must be readable by both the old image (the server before the rework) and the new image (the server after the rework).
 2. The field values of the state read by the two images must be the same.
 
-I picked the snapshots of 20 heavy users. I read each one with the old image and the new image and compared the field values. For all users, the data team ran a replay and checked that no errors occurred. In other words, we compared the actual values for only 20 users.
+I picked the snapshots of 20 heavy users. I read each one with the old image and the new image and compared the field values. This comparison is also how I found the gacha history bug above. For all users, the data team ran a replay and checked that no errors occurred. In other words, we compared the actual values for only 20 users.
 
 If I did it today, I would build a tool like a verifier first, before starting the work. It would read the same user data with the old and new images. Then it would compare the field values automatically. That way, we could compare all users, not just 20. We could also repeat the same comparison every time we change a reward type.
 
