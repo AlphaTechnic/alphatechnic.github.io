@@ -262,7 +262,11 @@ This method costs more, though. The migration logic has to read the old value. S
 
 ### A Last-Minute Bug and ForDeprecated
 
-I thought I was done, but a bug showed up at the last minute. Some old data could not be split exactly into the new structure. For example, the old `ConvertedReward` does not record what was replaced. So we can't fill in `replacedOriginId`.
+I thought I was done, but at the last minute I found a bug that made replay fail. The cause was the gacha history (`GachaHistory`). The gacha history is stored in the user state, and it holds the Rewards the user received as they are. So old gacha history still had rewards in the old structure, such as the old `ConvertedReward`.
+
+But at first, I had deleted these old reward types from the proto. So when we read old gacha history, those places were read as empty. An empty reward can't be turned into a domain object, so reading failed with an error. This is the "replay fails completely" case from above.
+
+So I brought the deleted old reward types back with the same numbers and added `Deprecated` to their names. But some of this old data could not be split exactly into the new structure. For example, the old `ConvertedReward` does not record what was replaced. So we can't fill in `replacedOriginId`.
 
 So I added a reward type called `ForDeprecated` and put all such old data into it.
 
@@ -275,7 +279,7 @@ case ForDeprecated(rewards) =>
   rewards.traverse_(applyReward)
 ```
 
-`ForDeprecated` is only created when reading old events. New code never creates this type. When replaying old events, what matters is that the same rewards are applied to the state in the same way. There is no need to split past rewards into the new structure again. So `ForDeprecated` just applies every reward inside it to the state. For example, an old treasure reward with a conversion is read as one `ForDeprecated`. It holds both the original reward and the converted rewards.
+`ForDeprecated` is only created when reading old data, such as old events or old gacha history. New code never creates this type. When replaying old events, what matters is that the same rewards are applied to the state in the same way. There is no need to split past rewards into the new structure again. So `ForDeprecated` just applies every reward inside it to the state. For example, an old treasure reward with a conversion is read as one `ForDeprecated`. It holds both the original reward and the converted rewards.
 
 ```scala
 // An old treasure reward with a conversion is read as one ForDeprecated.
