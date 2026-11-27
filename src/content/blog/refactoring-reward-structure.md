@@ -58,7 +58,22 @@ If you miss even one place, the converted reward silently disappears. In practic
 
 The client had the same problem. To interpret the rewards in a response, it had to know different rules for each reward type. And whoever added a new reward type expressed conversions in their own way each time.
 
-So everyone agreed that this structure was a problem. But we disagreed on how to fix it. One idea was to add a way to put converted rewards inside the original reward. But that is closer to a promise to "write it this way". The code does not enforce it. Reward types grow every time a new product comes out. So I thought we had to change the structure itself, even with the risk to backward compatibility.
+So everyone agreed that this structure was a problem. But we disagreed on how to fix it. One idea was to keep the current structure and only unify how each reward holds its conversion. For example, if `RewardElement` has `convertedReward` as an abstract method, every reward type is forced to implement it.
+
+```scala
+// Another option: force every reward element to expose its conversion.
+sealed trait RewardElement {
+  def convertedReward: Option[ConvertedReward]
+}
+```
+
+But this approach had limits.
+
+- **It still can't express a missing original reward.** The conversion lives inside the original reward. So even when the whole original reward is converted, we still need an original reward to hold the conversion. We would still need types like `PreexistingSkin`.
+- **The nesting does not go away.** The rewards inside a `ConvertedReward` are also `RewardElement`s, so each of them has its own `convertedReward`. Conversions can still be nested at any depth.
+- **Protobuf can't force it.** Protobuf messages have no inheritance, so each message needs its own conversion field. The client still has to look inside each reward type.
+
+Reward types grow every time a new product comes out. So I thought we had to change the structure itself, even with the risk to backward compatibility.
 
 ## New Structure: Original Reward and Converted Reward
 
