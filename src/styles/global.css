@@ -30,8 +30,38 @@ html {
 	scroll-behavior: smooth;
 }
 
+/*
+ * On desktop, draw the page at 80% size, as if the browser zoom were 80%.
+ * Almost every size is in rem, so a smaller root font size scales the whole page.
+ * Media queries use the browser's default font size, so breakpoints don't move.
+ */
+@media (width >= 64rem) {
+	html {
+		font-size: 80%;
+	}
+}
+
+/*
+ * Page width. Same steps as Tailwind's `container`, but from 64rem on they follow
+ * 80% zoom: the xl width starts at 64rem and the 2xl width at 76.8rem
+ * (80% of 80rem and 96rem).
+ */
 .app-container {
-	@apply container mx-auto px-6 sm:px-12 2xl:px-16;
+	@apply mx-auto w-full px-6 sm:px-12;
+
+	@media (width >= 40rem) {
+		max-width: 40rem;
+	}
+	@media (width >= 48rem) {
+		max-width: 48rem;
+	}
+	@media (width >= 64rem) {
+		max-width: 80rem;
+	}
+	@media (width >= 76.8rem) {
+		max-width: 96rem;
+		padding-inline: 4rem;
+	}
 }
 
 #mobile-menu.mobile-nav-open {
