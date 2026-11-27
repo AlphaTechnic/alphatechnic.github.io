@@ -1,7 +1,7 @@
 // Global site settings. Change these first when renaming or moving the blog.
 
 export const SITE_TITLE = 'AlphaTechnic Tech Blog'
-export const SITE_HEADING = "AlphaTechnic's Blog"
+export const SITE_HEADING = 'AlphaTechnic Tech Blog'
 export const SITE_DESCRIPTION =
 	'Writing about the problems I run into and what I learn from them.'
 
